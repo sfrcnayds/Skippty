@@ -24,29 +24,39 @@ import javax.swing.border.*;
  * @author sefercanaydas
  */
 public class SkipptyGame extends javax.swing.JFrame {
-
-    private ImageIcon getRoyIcon() {
-        ImageIcon imageIcon;
-
-        try {
-            String iconLocation = "http://orig06.deviantart.net/fd0e/f/2008"
-                    + "/060/d/1/roy_sprite_by_chstuba007.gif";
-            imageIcon = new ImageIcon(new URL(iconLocation));
-            Image image = imageIcon.getImage(); // transform it 
-            Image newimg = image.getScaledInstance(64, 64, java.awt.Image.SCALE_SMOOTH); // scale it the smooth way  
-            imageIcon = new ImageIcon(newimg);  // transform it back
-        } catch (MalformedURLException e) {
-            imageIcon = null;
+    SkippityNode clickedButton = null;
+    
+    public void updateBoard(){
+        for (int row = 0; row < skipptyNodes.length; row++) {
+            for (int col = 0; col < skipptyNodes[row].length; col++) {
+                SkippityNode b = skipptyNodes[row][col];
+                switch (b.type) {
+                    case RED:
+                        b.setBackground(Color.RED);
+                        break;
+                    case ORANGE:
+                        b.setBackground(Color.ORANGE);
+                        break;
+                    case YELLOW:
+                        b.setBackground(Color.YELLOW);
+                        break;
+                    case GREEN:
+                        b.setBackground(Color.GREEN);
+                        break;
+                    case BLUE:
+                        b.setBackground(Color.BLUE);
+                        break;
+                    default:
+                        b.setBackground(Color.WHITE);
+                }
+            }
         }
-
-        return imageIcon;
     }
-
     public enum SkipptyNodeType {
         NULL, RED, ORANGE, YELLOW, GREEN, BLUE
     }
     private final JPanel gui = new JPanel(new BorderLayout(3, 3));
-    private JButton[][] skipptyNodes = new JButton[10][10];
+    private SkippityNode[][] skipptyNodes = new SkippityNode[10][10];
     private JPanel chessBoard;
     private final JLabel message = new JLabel("Chess Champ is ready to play!");
 
@@ -54,13 +64,25 @@ public class SkipptyGame extends javax.swing.JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            
-            SkippityNode node = (SkippityNode) e.getSource();
+            if (clickedButton == null) {
+                SkippityNode node = (SkippityNode) e.getSource();
+                clickedButton = node;
+            }else{
+                SkippityNode secondClick = (SkippityNode) e.getSource();
+                if (secondClick.type == SkipptyNodeType.NULL) {
+                    secondClick.type = clickedButton.type;
+                    clickedButton.type = SkipptyNodeType.NULL;
+                    clickedButton = null;
+                    updateBoard();
+                }else{
+                    clickedButton = null;
+                    JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
+                }
+            }
         }
     }
 
     private class SkippityNode extends JButton {
-
         SkipptyNodeType type = SkipptyNodeType.NULL;
         int row, col;
         boolean isClicked = false;
@@ -92,13 +114,13 @@ public class SkipptyGame extends javax.swing.JFrame {
                 SkippityNode b = new SkippityNode();
                 if (row != 4 || col != 5) {
                     b.type = nodeTypes[counter++ % 5];
+                }else{
+                    counter++;
                 }
                 b.col = col;
                 b.row = row;
                 b.addActionListener(new Listener());
                 b.setMargin(buttonMargin);
-                // our chess pieces are 64x64 px in size, so we'll
-                // 'fill this in' using a transparent icon..
                 ImageIcon icon = new ImageIcon(new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB));
                 b.setIcon(icon);
                 switch (b.type) {
