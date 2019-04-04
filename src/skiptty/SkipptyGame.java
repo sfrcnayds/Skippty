@@ -24,9 +24,10 @@ import javax.swing.border.*;
  * @author sefercanaydas
  */
 public class SkipptyGame extends javax.swing.JFrame {
+
     SkippityNode clickedButton = null;
-    
-    public void updateBoard(){
+
+    public void updateBoard() {
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
                 SkippityNode b = skipptyNodes[row][col];
@@ -52,6 +53,7 @@ public class SkipptyGame extends javax.swing.JFrame {
             }
         }
     }
+
     public enum SkipptyNodeType {
         NULL, RED, ORANGE, YELLOW, GREEN, BLUE
     }
@@ -67,14 +69,50 @@ public class SkipptyGame extends javax.swing.JFrame {
             if (clickedButton == null) {
                 SkippityNode node = (SkippityNode) e.getSource();
                 clickedButton = node;
-            }else{
+            } else {
                 SkippityNode secondClick = (SkippityNode) e.getSource();
                 if (secondClick.type == SkipptyNodeType.NULL) {
-                    secondClick.type = clickedButton.type;
-                    clickedButton.type = SkipptyNodeType.NULL;
-                    clickedButton = null;
+                    if ((secondClick.row == clickedButton.row + 1 && secondClick.col == clickedButton.col)
+                            || (secondClick.row == clickedButton.row - 1 && secondClick.col == clickedButton.col)
+                            || (secondClick.col == clickedButton.col + 1 && secondClick.row == clickedButton.row)
+                            || (secondClick.col == clickedButton.col - 1 && secondClick.row == clickedButton.row)) {
+                        secondClick.type = clickedButton.type;
+                        clickedButton.type = SkipptyNodeType.NULL;
+                        clickedButton = null;
+                    } else if (secondClick.row == clickedButton.row + 2 && secondClick.col == clickedButton.col) {
+                        if (skipptyNodes[clickedButton.row + 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                            skipptyNodes[clickedButton.row + 1][clickedButton.col].type = SkipptyNodeType.NULL;
+                            secondClick.type = clickedButton.type;
+                            clickedButton.type = SkipptyNodeType.NULL;
+                            clickedButton = null;
+                        }
+                    } else if (secondClick.row == clickedButton.row - 2 && secondClick.col == clickedButton.col) {
+                        if (skipptyNodes[clickedButton.row - 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                            skipptyNodes[clickedButton.row - 1][clickedButton.col].type = SkipptyNodeType.NULL;
+                            secondClick.type = clickedButton.type;
+                            clickedButton.type = SkipptyNodeType.NULL;
+                            clickedButton = null;
+                        }
+                    } else if (secondClick.col == clickedButton.col + 2 && secondClick.row == clickedButton.row) {
+                        if (skipptyNodes[clickedButton.row][clickedButton.col + 1].type != SkipptyNodeType.NULL) {
+                            skipptyNodes[clickedButton.row][clickedButton.col + 1].type = SkipptyNodeType.NULL;
+                            secondClick.type = clickedButton.type;
+                            clickedButton.type = SkipptyNodeType.NULL;
+                            clickedButton = null;
+                        }
+                    } else if (secondClick.col == clickedButton.col - 2 && secondClick.row == clickedButton.row) {
+                        if (skipptyNodes[clickedButton.row][clickedButton.col -1].type != SkipptyNodeType.NULL) {
+                            skipptyNodes[clickedButton.row][clickedButton.col -1].type = SkipptyNodeType.NULL;
+                            secondClick.type = clickedButton.type;
+                            clickedButton.type = SkipptyNodeType.NULL;
+                            clickedButton = null;
+                        }
+                    } else {
+                        clickedButton = null;
+                        JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
+                    }
                     updateBoard();
-                }else{
+                } else {
                     clickedButton = null;
                     JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                 }
@@ -83,6 +121,7 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     private class SkippityNode extends JButton {
+
         SkipptyNodeType type = SkipptyNodeType.NULL;
         int row, col;
         boolean isClicked = false;
@@ -114,7 +153,7 @@ public class SkipptyGame extends javax.swing.JFrame {
                 SkippityNode b = new SkippityNode();
                 if (row != 4 || col != 5) {
                     b.type = nodeTypes[counter++ % 5];
-                }else{
+                } else {
                     counter++;
                 }
                 b.col = col;
@@ -142,13 +181,13 @@ public class SkipptyGame extends javax.swing.JFrame {
                     default:
                         b.setBackground(Color.WHITE);
                 }
-                skipptyNodes[col][row] = b;
+                skipptyNodes[row][col] = b;
             }
         }
         // fill the black non-pawn piece row
-        for (int ii = 0; ii < 10; ii++) {
-            for (int jj = 0; jj < 10; jj++) {
-                chessBoard.add(skipptyNodes[jj][ii]);
+        for (int row = 0; row < 10; row++) {
+            for (int col = 0; col < 10; col++) {
+                chessBoard.add(skipptyNodes[row][col]);
             }
         }
     }
