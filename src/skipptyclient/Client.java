@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import static skipptyclient.Client.sInput;
 import game.SkipptyGame;
 import java.awt.FlowLayout;
+import java.util.List;
 
 /**
  *
@@ -32,6 +33,9 @@ class Listen extends Thread {
                 //mesaj gelirse bu satıra geçer
                 //mesaj tipine göre yapılacak işlemi ayır.
                 switch (received.type) {
+                    case YourTurn:
+                        SkipptyGame.ThisGame.isYourTurn = (boolean)received.content;
+                        break;
                     case Name:
                         break;
                     case RivalConnected:
@@ -44,7 +48,9 @@ class Listen extends Thread {
                     case Disconnect:
                         break;
                     case Text:
-                        // SkipptyGame.ThisGame.txt_receive.setText(received.content.toString());
+                        List<String> array=(List<String>)received.content;
+                        SkipptyGame.ThisGame.updateBoard(array);
+                        SkipptyGame.ThisGame.isYourTurn = true;
                         break;
                     case Selected:
                         // Game.SkipptyGame.RivalSelection = (int) received.content;
@@ -118,9 +124,7 @@ public class Client {
     }
 
     public static void Display(String msg) {
-
         System.out.println(msg);
-
     }
 
     //mesaj gönderme fonksiyonu

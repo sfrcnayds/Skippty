@@ -10,10 +10,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.*;
 import javax.swing.border.*;
 import skipptyclient.Client;
@@ -55,62 +55,99 @@ public class SkipptyGame extends javax.swing.JFrame {
         }
     }
 
+    public void updateBoard(List<String> strings) {
+        strings.get(0);
+        for (int row = 0; row < skipptyNodes.length; row++) {
+            for (int col = 0; col < skipptyNodes[row].length; col++) {
+                int indeks = (row * 10) + col;
+                String type = strings.get(indeks);
+                switch (type) {
+                    case "RED":
+                        skipptyNodes[row][col].type = SkipptyNodeType.RED;
+                        break;
+                    case "ORANGE":
+                        skipptyNodes[row][col].type = SkipptyNodeType.ORANGE;
+                        break;
+                    case "YELLOW":
+                        skipptyNodes[row][col].type = SkipptyNodeType.YELLOW;
+                        break;
+                    case "GREEN":
+                        skipptyNodes[row][col].type = SkipptyNodeType.GREEN;
+                        break;
+                    case "BLUE":
+                        skipptyNodes[row][col].type = SkipptyNodeType.BLUE;
+                        break;
+                    default:
+                        skipptyNodes[row][col].type = SkipptyNodeType.NULL;
+                }
+            }
+        }
+        updateBoard();
+    }
+
     public static enum SkipptyNodeType {
         NULL, RED, ORANGE, YELLOW, GREEN, BLUE
     }
     public final JPanel gui = new JPanel(new BorderLayout(3, 3));
     public SkippityNode[][] skipptyNodes = new SkippityNode[10][10];
-    public JPanel chessBoard;
+    public JPanel skipptyBoard;
     public final JLabel message = new JLabel("Chess Champ is ready to play!");
+    public boolean isYourTurn = false;
 
     private class Listener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (clickedButton == null) {
-                SkippityNode node = (SkippityNode) e.getSource();
-                clickedButton = node;
-                if (clickedButton.type == SkipptyNodeType.NULL) {
-                    clickedButton = null;
-                    JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
-                }
-            } else {
-                SkippityNode secondClick = (SkippityNode) e.getSource();
-                if (secondClick.type == SkipptyNodeType.NULL) {
-                    if (secondClick.row == clickedButton.row + 2 && secondClick.col == clickedButton.col) {
-                        if (skipptyNodes[clickedButton.row + 1][clickedButton.col].type != SkipptyNodeType.NULL) {
-                            skipptyNodes[clickedButton.row + 1][clickedButton.col].type = SkipptyNodeType.NULL;
-                            secondClick.type = clickedButton.type;
-                            clickedButton.type = SkipptyNodeType.NULL;
+            if (isYourTurn) {
+                if (clickedButton == null) {
+                    SkippityNode node = (SkippityNode) e.getSource();
+                    clickedButton = node;
+                    if (clickedButton.type == SkipptyNodeType.NULL) {
+                        clickedButton = null;
+                        JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
+                    }
+                } else {
+                    SkippityNode secondClick = (SkippityNode) e.getSource();
+                    if (secondClick.type == SkipptyNodeType.NULL) {
+                        if (secondClick.row == clickedButton.row + 2 && secondClick.col == clickedButton.col) {
+                            if (skipptyNodes[clickedButton.row + 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                                skipptyNodes[clickedButton.row + 1][clickedButton.col].type = SkipptyNodeType.NULL;
+                                secondClick.type = clickedButton.type;
+                                clickedButton.type = SkipptyNodeType.NULL;
+                            }
+                        } else if (secondClick.row == clickedButton.row - 2 && secondClick.col == clickedButton.col) {
+                            if (skipptyNodes[clickedButton.row - 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                                skipptyNodes[clickedButton.row - 1][clickedButton.col].type = SkipptyNodeType.NULL;
+                                secondClick.type = clickedButton.type;
+                                clickedButton.type = SkipptyNodeType.NULL;
+                            }
+                        } else if (secondClick.col == clickedButton.col + 2 && secondClick.row == clickedButton.row) {
+                            if (skipptyNodes[clickedButton.row][clickedButton.col + 1].type != SkipptyNodeType.NULL) {
+                                skipptyNodes[clickedButton.row][clickedButton.col + 1].type = SkipptyNodeType.NULL;
+                                secondClick.type = clickedButton.type;
+                                clickedButton.type = SkipptyNodeType.NULL;
+                            }
+                        } else if (secondClick.col == clickedButton.col - 2 && secondClick.row == clickedButton.row) {
+                            if (skipptyNodes[clickedButton.row][clickedButton.col - 1].type != SkipptyNodeType.NULL) {
+                                skipptyNodes[clickedButton.row][clickedButton.col - 1].type = SkipptyNodeType.NULL;
+                                secondClick.type = clickedButton.type;
+                                clickedButton.type = SkipptyNodeType.NULL;
+                            }
+                        } else {
+                            clickedButton = null;
+                            JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                         }
-                    } else if (secondClick.row == clickedButton.row - 2 && secondClick.col == clickedButton.col) {
-                        if (skipptyNodes[clickedButton.row - 1][clickedButton.col].type != SkipptyNodeType.NULL) {
-                            skipptyNodes[clickedButton.row - 1][clickedButton.col].type = SkipptyNodeType.NULL;
-                            secondClick.type = clickedButton.type;
-                            clickedButton.type = SkipptyNodeType.NULL;
-                        }
-                    } else if (secondClick.col == clickedButton.col + 2 && secondClick.row == clickedButton.row) {
-                        if (skipptyNodes[clickedButton.row][clickedButton.col + 1].type != SkipptyNodeType.NULL) {
-                            skipptyNodes[clickedButton.row][clickedButton.col + 1].type = SkipptyNodeType.NULL;
-                            secondClick.type = clickedButton.type;
-                            clickedButton.type = SkipptyNodeType.NULL;
-                        }
-                    } else if (secondClick.col == clickedButton.col - 2 && secondClick.row == clickedButton.row) {
-                        if (skipptyNodes[clickedButton.row][clickedButton.col - 1].type != SkipptyNodeType.NULL) {
-                            skipptyNodes[clickedButton.row][clickedButton.col - 1].type = SkipptyNodeType.NULL;
-                            secondClick.type = clickedButton.type;
-                            clickedButton.type = SkipptyNodeType.NULL;
-                        }
+                        updateBoard();
                     } else {
                         clickedButton = null;
                         JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                     }
-                    updateBoard();
-                } else {
-                    clickedButton = null;
-                    JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                 }
+            } else {
+                clickedButton = null;
+                JOptionPane.showMessageDialog(rootPane, "Lütfen Sıranızı Bekleyin!!");
             }
+
         }
     }
 
@@ -143,9 +180,9 @@ public class SkipptyGame extends javax.swing.JFrame {
         tools.add(new JButton("Resign")); // TODO - add functionality!
         tools.addSeparator();
         tools.add(message);
-        chessBoard = new JPanel(new GridLayout(0, 10));
-        chessBoard.setBorder(new LineBorder(Color.BLACK));
-        gui.add(chessBoard);
+        skipptyBoard = new JPanel(new GridLayout(0, 10));
+        skipptyBoard.setBorder(new LineBorder(Color.BLACK));
+        gui.add(skipptyBoard);
         Insets buttonMargin = new Insets(0, 0, 0, 0);
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
@@ -177,7 +214,7 @@ public class SkipptyGame extends javax.swing.JFrame {
                         b.setBackground(Color.WHITE);
                 }
                 skipptyNodes[row][col] = b;
-                chessBoard.add(b);
+                skipptyBoard.add(b);
             }
         }
         skipptyNodes[4][4].type = SkipptyNodeType.NULL;
@@ -187,12 +224,39 @@ public class SkipptyGame extends javax.swing.JFrame {
         updateBoard();
     }
 
-    public final JComponent getChessBoard() {
-        return chessBoard;
-    }
-
-    public final JComponent getGui() {
-        return gui;
+    public void sendGameBoard() {
+        List<String> nodes = new ArrayList();
+        for (int i = 0; i < skipptyNodes.length; i++) {
+            for (int j = 0; j < skipptyNodes[i].length; j++) {
+                String nodeType = "";
+                switch (skipptyNodes[i][j].type) {
+                    case NULL:
+                        nodeType = "NULL";
+                        break;
+                    case BLUE:
+                        nodeType = "BLUE";
+                        break;
+                    case GREEN:
+                        nodeType = "GREEN";
+                        break;
+                    case ORANGE:
+                        nodeType = "ORANGE";
+                        break;
+                    case RED:
+                        nodeType = "RED";
+                        break;
+                    case YELLOW:
+                        nodeType = "YELLOW";
+                        break;
+                    default:
+                        throw new AssertionError();
+                }
+                nodes.add(nodeType);
+            }
+        }
+        Message msg = new Message(Message.Message_Type.Text);
+        msg.content = nodes;
+        Client.Send(msg);
     }
 
     /**
@@ -230,6 +294,11 @@ public class SkipptyGame extends javax.swing.JFrame {
         txtName.setText("Name");
 
         jButton2.setText("Oyna");
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -241,8 +310,8 @@ public class SkipptyGame extends javax.swing.JFrame {
                     .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(66, Short.MAX_VALUE))
+                .addComponent(txtName, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -277,9 +346,20 @@ public class SkipptyGame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
         Client.Start("127.0.0.1", 2000);
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        // TODO add your handling code here:
+        if (isYourTurn) {
+            sendGameBoard();
+            this.isYourTurn = false;
+        } else {
+            JOptionPane.showMessageDialog(rootPane, "Lütfen Sıranızı Bekleyiniz");
+        }
+
+
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     /**
      * @param args the command line arguments
