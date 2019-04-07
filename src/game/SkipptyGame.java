@@ -10,9 +10,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -24,8 +25,10 @@ import skipptyclient.Client;
  */
 public class SkipptyGame extends javax.swing.JFrame {
 
+    Map<SkipptyNodeType, Integer> skipptyCount = new EnumMap<SkipptyNodeType, Integer>(SkipptyNodeType.class);
     public static SkipptyGame ThisGame;
     SkippityNode clickedButton = null;
+
     private final SkipptyNodeType nodeTypes[] = {SkipptyNodeType.RED, SkipptyNodeType.ORANGE, SkipptyNodeType.YELLOW, SkipptyNodeType.GREEN, SkipptyNodeType.BLUE};
 
     public void updateBoard() {
@@ -91,8 +94,9 @@ public class SkipptyGame extends javax.swing.JFrame {
     public final JPanel gui = new JPanel(new BorderLayout(3, 3));
     public SkippityNode[][] skipptyNodes = new SkippityNode[10][10];
     public JPanel skipptyBoard;
-    public final JLabel message = new JLabel("Chess Champ is ready to play!");
+    public final JLabel message = new JLabel("");
     public boolean isYourTurn = false;
+    public boolean isFirstMove = true;
 
     private class Listener implements ActionListener {
 
@@ -111,35 +115,50 @@ public class SkipptyGame extends javax.swing.JFrame {
                     if (secondClick.type == SkipptyNodeType.NULL) {
                         if (secondClick.row == clickedButton.row + 2 && secondClick.col == clickedButton.col) {
                             if (skipptyNodes[clickedButton.row + 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                                skipptyCount.replace(skipptyNodes[clickedButton.row + 1][clickedButton.col].type, skipptyCount.get(skipptyNodes[clickedButton.row + 1][clickedButton.col].type) + 1);
                                 skipptyNodes[clickedButton.row + 1][clickedButton.col].type = SkipptyNodeType.NULL;
                                 secondClick.type = clickedButton.type;
                                 clickedButton.type = SkipptyNodeType.NULL;
+                                clickedButton = secondClick;
+                                isFirstMove = false;
                             }
                         } else if (secondClick.row == clickedButton.row - 2 && secondClick.col == clickedButton.col) {
                             if (skipptyNodes[clickedButton.row - 1][clickedButton.col].type != SkipptyNodeType.NULL) {
+                                skipptyCount.replace(skipptyNodes[clickedButton.row - 1][clickedButton.col].type, skipptyCount.get(skipptyNodes[clickedButton.row - 1][clickedButton.col].type) + 1);
                                 skipptyNodes[clickedButton.row - 1][clickedButton.col].type = SkipptyNodeType.NULL;
                                 secondClick.type = clickedButton.type;
                                 clickedButton.type = SkipptyNodeType.NULL;
+                                clickedButton = secondClick;
+                                isFirstMove = false;
                             }
                         } else if (secondClick.col == clickedButton.col + 2 && secondClick.row == clickedButton.row) {
                             if (skipptyNodes[clickedButton.row][clickedButton.col + 1].type != SkipptyNodeType.NULL) {
+                                skipptyCount.replace(skipptyNodes[clickedButton.row][clickedButton.col + 1].type, skipptyCount.get(skipptyNodes[clickedButton.row][clickedButton.col + 1].type) + 1);
                                 skipptyNodes[clickedButton.row][clickedButton.col + 1].type = SkipptyNodeType.NULL;
                                 secondClick.type = clickedButton.type;
                                 clickedButton.type = SkipptyNodeType.NULL;
+                                clickedButton = secondClick;
+                                isFirstMove = false;
                             }
                         } else if (secondClick.col == clickedButton.col - 2 && secondClick.row == clickedButton.row) {
                             if (skipptyNodes[clickedButton.row][clickedButton.col - 1].type != SkipptyNodeType.NULL) {
+                                skipptyCount.replace(skipptyNodes[clickedButton.row][clickedButton.col - 1].type, skipptyCount.get(skipptyNodes[clickedButton.row][clickedButton.col - 1].type) + 1);
                                 skipptyNodes[clickedButton.row][clickedButton.col - 1].type = SkipptyNodeType.NULL;
                                 secondClick.type = clickedButton.type;
                                 clickedButton.type = SkipptyNodeType.NULL;
+                                clickedButton = secondClick;
+                                isFirstMove = false;
                             }
                         } else {
-                            clickedButton = null;
+                            if (isFirstMove) {
+                                clickedButton = null;
+                            }
                             JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                         }
-                        updateBoard();
                     } else {
-                        clickedButton = null;
+                        if (isFirstMove) {
+                            clickedButton = null;
+                        }
                         JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                     }
                 }
@@ -147,7 +166,8 @@ public class SkipptyGame extends javax.swing.JFrame {
                 clickedButton = null;
                 JOptionPane.showMessageDialog(rootPane, "Lütfen Sıranızı Bekleyin!!");
             }
-
+            updateBoard();
+            updateScoreBoard();
         }
     }
 
@@ -173,12 +193,6 @@ public class SkipptyGame extends javax.swing.JFrame {
         JToolBar tools = new JToolBar();
         tools.setFloatable(false);
         gui.add(tools, BorderLayout.PAGE_START);
-        tools.add(new JButton("New")); // TODO - add functionality!
-        tools.add(new JButton("Save")); // TODO - add functionality!
-        tools.add(new JButton("Restore")); // TODO - add functionality!
-        tools.addSeparator();
-        tools.add(new JButton("Resign")); // TODO - add functionality!
-        tools.addSeparator();
         tools.add(message);
         skipptyBoard = new JPanel(new GridLayout(0, 10));
         skipptyBoard.setBorder(new LineBorder(Color.BLACK));
@@ -254,7 +268,7 @@ public class SkipptyGame extends javax.swing.JFrame {
                 nodes.add(nodeType);
             }
         }
-        Message msg = new Message(Message.Message_Type.Text);
+        Message msg = new Message(Message.Message_Type.Move);
         msg.content = nodes;
         Client.Send(msg);
     }
@@ -266,6 +280,81 @@ public class SkipptyGame extends javax.swing.JFrame {
         initComponents();
         ThisGame = this;
         this.add(gui);
+        skipptyCount.put(SkipptyNodeType.RED, 0);
+        skipptyCount.put(SkipptyNodeType.BLUE, 0);
+        skipptyCount.put(SkipptyNodeType.GREEN, 0);
+        skipptyCount.put(SkipptyNodeType.ORANGE, 0);
+        skipptyCount.put(SkipptyNodeType.YELLOW, 0);
+    }
+
+    public boolean isGameEnd() {
+        for (int row = 0; row < skipptyNodes.length; row++) {
+            for (int col = 0; col < skipptyNodes[row].length; col++) {
+                SkippityNode node = skipptyNodes[row][col];
+                if (node.type == SkipptyNodeType.NULL) {
+                    continue;
+                }
+                try {
+                    if (skipptyNodes[node.row + 1][node.col].type != SkipptyNodeType.NULL) {
+                        if (skipptyNodes[node.row + 2][node.col].type == SkipptyNodeType.NULL) {
+                            return false;
+                        }
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                }
+                try {
+                    if (skipptyNodes[node.row - 1][node.col].type != SkipptyNodeType.NULL) {
+                        if (skipptyNodes[node.row - 2][node.col].type == SkipptyNodeType.NULL) {
+                            return false;
+                        }
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                }
+                try {
+                    if (skipptyNodes[node.row][node.col + 1].type != SkipptyNodeType.NULL) {
+                        if (skipptyNodes[node.row][node.col + 2].type == SkipptyNodeType.NULL) {
+                            return false;
+                        }
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                }
+                try {
+                    if (skipptyNodes[node.row][node.col - 1].type != SkipptyNodeType.NULL) {
+                        if (skipptyNodes[node.row][node.col - 2].type == SkipptyNodeType.NULL) {
+                            return false;
+                        }
+                    }
+                } catch (ArrayIndexOutOfBoundsException e) {
+                }
+            }
+        }
+        return true;
+    }
+
+    public void updateScoreBoard() {
+        for (Map.Entry<SkipptyNodeType, Integer> entry : skipptyCount.entrySet()) {
+            SkipptyNodeType key = entry.getKey();
+            Integer value = entry.getValue();
+            switch (key) {
+                case BLUE:
+                    blueCount.setText(String.valueOf(value));
+                    break;
+                case GREEN:
+                    greenCount.setText(String.valueOf(value));
+                    break;
+                case ORANGE:
+                    orangeCount.setText(String.valueOf(value));
+                    break;
+                case RED:
+                    redCount.setText(String.valueOf(value));
+                    break;
+                case YELLOW:
+                    yellowCount.setText(String.valueOf(value));
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
     }
 
     /**
@@ -278,16 +367,33 @@ public class SkipptyGame extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
+        btn_connect = new javax.swing.JButton();
         txtName = new javax.swing.JTextField();
         jButton2 = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel6 = new javax.swing.JLabel();
+        lblRivalName = new javax.swing.JLabel();
+        redCount = new javax.swing.JTextField();
+        greenCount = new javax.swing.JTextField();
+        orangeCount = new javax.swing.JTextField();
+        yellowCount = new javax.swing.JTextField();
+        blueCount = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
-        jButton1.setText("Connect");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btn_connect.setText("Connect");
+        btn_connect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btn_connectActionPerformed(evt);
             }
         });
 
@@ -300,29 +406,102 @@ public class SkipptyGame extends javax.swing.JFrame {
             }
         });
 
+        jLabel1.setText("Red:");
+
+        jLabel2.setText("Green:");
+
+        jLabel3.setText("Orange:");
+
+        jLabel4.setText("Yellow :");
+
+        jLabel5.setText("Blue :");
+
+        jLabel6.setText("Rival Name :");
+
+        redCount.setText("0");
+        redCount.setEnabled(false);
+
+        greenCount.setText("0");
+        greenCount.setEnabled(false);
+
+        orangeCount.setText("0");
+        orangeCount.setEnabled(false);
+
+        yellowCount.setText("0");
+        yellowCount.setEnabled(false);
+
+        blueCount.setText("0");
+        blueCount.setEnabled(false);
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtName, javax.swing.GroupLayout.DEFAULT_SIZE, 143, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(jButton2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btn_connect, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtName, javax.swing.GroupLayout.DEFAULT_SIZE, 99, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(25, 25, 25)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4)
+                            .addComponent(jLabel5))
+                        .addGap(33, 33, 33)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(blueCount)
+                            .addComponent(yellowCount)
+                            .addComponent(orangeCount)
+                            .addComponent(redCount)
+                            .addComponent(greenCount)))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jLabel6)
+                        .addGap(18, 18, 18)
+                        .addComponent(lblRivalName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(16, 16, 16)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel6)
+                    .addComponent(lblRivalName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
+                    .addComponent(btn_connect)
                     .addComponent(txtName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton2)
-                .addContainerGap(30, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel1)
+                    .addComponent(redCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(greenCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(orangeCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4)
+                    .addComponent(yellowCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel5)
+                    .addComponent(blueCount, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(109, 109, 109))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -332,34 +511,46 @@ public class SkipptyGame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(275, Short.MAX_VALUE))
+                .addContainerGap(319, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(284, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btn_connectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_connectActionPerformed
         Client.Start("127.0.0.1", 2000);
-    }//GEN-LAST:event_jButton1ActionPerformed
+        btn_connect.setEnabled(false);
+    }//GEN-LAST:event_btn_connectActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
         if (isYourTurn) {
-            sendGameBoard();
-            this.isYourTurn = false;
+            if (isGameEnd()) {
+                Message msg = new Message(Message.Message_Type.Bitis);
+                Client.Send(msg);
+                JOptionPane.showMessageDialog(this, "Oyun Bitti!");
+            } else {
+                sendGameBoard();
+                this.isYourTurn = false;
+                this.isFirstMove = true;
+                this.clickedButton = null;
+                this.message.setText("Rival Turn!!");
+            }
         } else {
             JOptionPane.showMessageDialog(rootPane, "Lütfen Sıranızı Bekleyiniz");
         }
-
-
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        Client.Stop();
+    }//GEN-LAST:event_formWindowClosing
 
     /**
      * @param args the command line arguments
@@ -405,9 +596,21 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JTextField blueCount;
+    private javax.swing.JButton btn_connect;
+    private javax.swing.JTextField greenCount;
     private javax.swing.JButton jButton2;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
+    public javax.swing.JLabel lblRivalName;
+    private javax.swing.JTextField orangeCount;
+    private javax.swing.JTextField redCount;
     public javax.swing.JTextField txtName;
+    private javax.swing.JTextField yellowCount;
     // End of variables declaration//GEN-END:variables
 }

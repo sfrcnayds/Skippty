@@ -16,6 +16,7 @@ import static skipptyclient.Client.sInput;
 import game.SkipptyGame;
 import java.awt.FlowLayout;
 import java.util.List;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -34,12 +35,15 @@ class Listen extends Thread {
                 //mesaj tipine göre yapılacak işlemi ayır.
                 switch (received.type) {
                     case YourTurn:
-                        SkipptyGame.ThisGame.isYourTurn = (boolean)received.content;
+                        SkipptyGame.ThisGame.message.setText("Your Turn !!");
+                        SkipptyGame.ThisGame.isYourTurn = (boolean) received.content;
                         break;
                     case Name:
+                        String rivalName = received.content.toString();
+                        SkipptyGame.ThisGame.lblRivalName.setText(rivalName);
                         break;
                     case RivalConnected:
-                        String gameBoard =received.content.toString();
+                        String gameBoard = received.content.toString();
                         SkipptyGame.ThisGame.initializeGui(gameBoard);
                         SkipptyGame.ThisGame.setLayout(new FlowLayout(FlowLayout.CENTER));
                         SkipptyGame.ThisGame.pack();
@@ -47,15 +51,17 @@ class Listen extends Thread {
                         break;
                     case Disconnect:
                         break;
-                    case Text:
-                        List<String> array=(List<String>)received.content;
+                    case Move:
+                        List<String> array = (List<String>) received.content;
                         SkipptyGame.ThisGame.updateBoard(array);
                         SkipptyGame.ThisGame.isYourTurn = true;
+                        SkipptyGame.ThisGame.message.setText("Your Turn!!");
                         break;
                     case Selected:
                         // Game.SkipptyGame.RivalSelection = (int) received.content;
                         break;
                     case Bitis:
+                        JOptionPane.showMessageDialog(SkipptyGame.ThisGame, "Oyun Bitti!");
                         break;
                     case StartGameBoard:
                         SkipptyGame.ThisGame.skipptyNodes = (SkipptyGame.SkippityNode[][]) received.content;
