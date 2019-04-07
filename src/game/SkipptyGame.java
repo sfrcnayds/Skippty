@@ -25,7 +25,7 @@ import skipptyclient.Client;
  */
 public class SkipptyGame extends javax.swing.JFrame {
 
-    Map<SkipptyNodeType, Integer> skipptyCount = new EnumMap<SkipptyNodeType, Integer>(SkipptyNodeType.class);
+    public Map<SkipptyNodeType, Integer> skipptyCount = new EnumMap<SkipptyNodeType, Integer>(SkipptyNodeType.class);
     public static SkipptyGame ThisGame;
     SkippityNode clickedButton = null;
 
@@ -533,9 +533,17 @@ public class SkipptyGame extends javax.swing.JFrame {
         // TODO add your handling code here:
         if (isYourTurn) {
             if (isGameEnd()) {
+                int score = Integer.MAX_VALUE;
+                for (Map.Entry<SkipptyNodeType, Integer> entry : skipptyCount.entrySet()) {
+                    SkipptyNodeType key = entry.getKey();
+                    Integer value = entry.getValue();
+                    if (value < score) {
+                        score = value;
+                    }
+                }
                 Message msg = new Message(Message.Message_Type.Bitis);
+                msg.content = score;
                 Client.Send(msg);
-                JOptionPane.showMessageDialog(this, "Oyun Bitti!");
             } else {
                 sendGameBoard();
                 this.isYourTurn = false;

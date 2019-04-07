@@ -16,6 +16,7 @@ import static skipptyclient.Client.sInput;
 import game.SkipptyGame;
 import java.awt.FlowLayout;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JOptionPane;
 
 /**
@@ -58,19 +59,44 @@ class Listen extends Thread {
                         SkipptyGame.ThisGame.message.setText("Your Turn!!");
                         break;
                     case Selected:
-                        // Game.SkipptyGame.RivalSelection = (int) received.content;
                         break;
                     case Bitis:
-                        JOptionPane.showMessageDialog(SkipptyGame.ThisGame, "Oyun Bitti!");
+                        Message msg = new Message(Message.Message_Type.BitisRakip);
+                        int score = Integer.MAX_VALUE;
+                        for (Map.Entry<SkipptyGame.SkipptyNodeType, Integer> entry : SkipptyGame.ThisGame.skipptyCount.entrySet()) {
+                            SkipptyGame.SkipptyNodeType key = entry.getKey();
+                            Integer value = entry.getValue();
+                            if (value < score) {
+                                score = value;
+                            }
+                        }
+                        msg.content = score;
+                        Client.Send(msg);
                         break;
                     case StartGameBoard:
                         SkipptyGame.ThisGame.skipptyNodes = (SkipptyGame.SkippityNode[][]) received.content;
+                        break;
+                    case Sonuc:
+                        String sonuc = received.content.toString();
+                        if (sonuc.equals("Win")) {
+                            JOptionPane.showMessageDialog(SkipptyGame.ThisGame, "Kazandınız");
+                        } else if (sonuc.equals("Tie")) {
+                            JOptionPane.showMessageDialog(SkipptyGame.ThisGame, "Berabere Kaldınız");
+                        } else {
+                            JOptionPane.showMessageDialog(SkipptyGame.ThisGame, "Kaybettiniz");
+                        }
+                        Thread.sleep(10000);
+                        SkipptyGame.ThisGame.dispose();
+                        break;
+
                 }
             } catch (IOException | ClassNotFoundException ex) {
 
                 Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                 //Client.Stop();
                 break;
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Listen.class.getName()).log(Level.SEVERE, null, ex);
             }
             //Client.Stop();
             //Client.Stop();
