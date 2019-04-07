@@ -32,6 +32,7 @@ public class SkipptyGame extends javax.swing.JFrame {
     private final SkipptyNodeType nodeTypes[] = {SkipptyNodeType.RED, SkipptyNodeType.ORANGE, SkipptyNodeType.YELLOW, SkipptyNodeType.GREEN, SkipptyNodeType.BLUE};
 
     public void updateBoard() {
+        //Oynanan hamlelelerden sonra buttonların türüne göre butonun arka planını ayarlama işlemleri
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
                 SkippityNode b = skipptyNodes[row][col];
@@ -59,6 +60,7 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     public void updateBoard(List<String> strings) {
+        //Karşı oyuncudan gelen Oyun tahtasını gerekli işlemlerle parsa ederek bizim oyun tahtamızı update etme işlemi
         strings.get(0);
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
@@ -92,17 +94,24 @@ public class SkipptyGame extends javax.swing.JFrame {
         NULL, RED, ORANGE, YELLOW, GREEN, BLUE
     }
     public final JPanel gui = new JPanel(new BorderLayout(3, 3));
+    //Oyun tahtasını bir matriste tutarak oynan hamleleri kontrol etmek ve karşı cliente göndermek için
     public SkippityNode[][] skipptyNodes = new SkippityNode[10][10];
     public JPanel skipptyBoard;
     public final JLabel message = new JLabel("");
+    //Sıranın bizde olup olmadığını göstermek için
     public boolean isYourTurn = false;
+    //Oynanan hamlenin ilk olup olmadığını tutmak için
     public boolean isFirstMove = true;
 
     private class Listener implements ActionListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            //Kodla eklediğim butonlara eklediğim ActionListener Oyun butonlarına basıldığında buraya düşüyor
+            
+            //Eğer Bizim sıramızsa işlem yapmak için
             if (isYourTurn) {
+                //Eğer İlk Butona basılma işlemi yapılmadıysa basılan butonu Oyun nesnesinin özelliği olarak saklıyoruz
                 if (clickedButton == null) {
                     SkippityNode node = (SkippityNode) e.getSource();
                     clickedButton = node;
@@ -111,6 +120,8 @@ public class SkipptyGame extends javax.swing.JFrame {
                         JOptionPane.showMessageDialog(rootPane, "Yanlış Hamle Oynadınız!!");
                     }
                 } else {
+                    //Eğer daha önce bi butona basıldıysa buraya gelir ve o aldığı ilk tıklama ile ikinci tıklama arasında karşılaştırma yaparak
+                    //Eğer oynanan hamle oyuna uygun hamle ise gerekli işlemleri yaptırıp değilse hata verdirir
                     SkippityNode secondClick = (SkippityNode) e.getSource();
                     if (secondClick.type == SkipptyNodeType.NULL) {
                         if (secondClick.row == clickedButton.row + 2 && secondClick.col == clickedButton.col) {
@@ -166,11 +177,12 @@ public class SkipptyGame extends javax.swing.JFrame {
                 clickedButton = null;
                 JOptionPane.showMessageDialog(rootPane, "Lütfen Sıranızı Bekleyin!!");
             }
+            //Oynanan hamlelerden sonra oyun tahtasını ve skor tahtasıı günceller
             updateBoard();
             updateScoreBoard();
         }
     }
-
+    //Buttonları oyun taşı olarak kullanmak için JButton üstüne özellikler ekledim
     public class SkippityNode extends JButton {
 
         SkipptyNodeType type = SkipptyNodeType.NULL;
@@ -179,7 +191,8 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     public final void initializeGui(String gameBoard) {
-        // set up the main GUI
+        // Oyun tahtasını ayarlama işlemi
+        //Oyun tahtasını serverdan string olarak alıp formatlı şekilde parse ettikten sonra oyun tahtamızı oluşturuyoruz
         int[][] gameBoardInt = new int[10][10];
         String[] rows = gameBoard.split(";");
         for (int i = 0; i < rows.length; i++) {
@@ -201,6 +214,7 @@ public class SkipptyGame extends javax.swing.JFrame {
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
                 SkippityNode b = new SkippityNode();
+                //Serverdan gelen typelara göre buttonun tipini set etme
                 b.type = nodeTypes[gameBoardInt[row][col]];
                 b.col = col;
                 b.row = row;
@@ -239,6 +253,7 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     public void sendGameBoard() {
+        //Gönderirken Nodelar Serileştirilemediği için string listesi olarak tahtayı karşı tarafa gönderiyoruz
         List<String> nodes = new ArrayList();
         for (int i = 0; i < skipptyNodes.length; i++) {
             for (int j = 0; j < skipptyNodes[i].length; j++) {
@@ -279,7 +294,9 @@ public class SkipptyGame extends javax.swing.JFrame {
     public SkipptyGame() {
         initComponents();
         ThisGame = this;
+        //Hazırlanan oyun tahtasını Frame ekleme
         this.add(gui);
+        //Mapin ilk değerlerini 0 olarak atama
         skipptyCount.put(SkipptyNodeType.RED, 0);
         skipptyCount.put(SkipptyNodeType.BLUE, 0);
         skipptyCount.put(SkipptyNodeType.GREEN, 0);
@@ -288,12 +305,15 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     public boolean isGameEnd() {
+        //Oyun bitmişmi kontrolunu yapmak için tek tek tüm taşların yapılabilecek hamlesi varmı kontrolü
         for (int row = 0; row < skipptyNodes.length; row++) {
             for (int col = 0; col < skipptyNodes[row].length; col++) {
                 SkippityNode node = skipptyNodes[row][col];
                 if (node.type == SkipptyNodeType.NULL) {
                     continue;
                 }
+                //Listeye bakarken ilerisine baktığımız için son taşlarda index hatası alabileceğimiz için
+                //Tüm blokları try catchlerle çevirdim
                 try {
                     if (skipptyNodes[node.row + 1][node.col].type != SkipptyNodeType.NULL) {
                         if (skipptyNodes[node.row + 2][node.col].type == SkipptyNodeType.NULL) {
@@ -332,6 +352,7 @@ public class SkipptyGame extends javax.swing.JFrame {
     }
 
     public void updateScoreBoard() {
+        //Scor tablosunu Mapimize göre güncelleme işlemi
         for (Map.Entry<SkipptyNodeType, Integer> entry : skipptyCount.entrySet()) {
             SkipptyNodeType key = entry.getKey();
             Integer value = entry.getValue();
@@ -531,9 +552,12 @@ public class SkipptyGame extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
+        //Eğer sıra bizdeyse Oyna Butonu işlem yapar
         if (isYourTurn) {
+            //Oyun yapılan hamlelerden sonra bitmişmi kontrolu yapar eğer bittiyse Servera Bitti Mesajı gönderilir
             if (isGameEnd()) {
                 int score = Integer.MAX_VALUE;
+                //Count mapini dönerek en küçük sayıda hangi taş alınmışsa o kadar seri yapmış oluyoruz
                 for (Map.Entry<SkipptyNodeType, Integer> entry : skipptyCount.entrySet()) {
                     SkipptyNodeType key = entry.getKey();
                     Integer value = entry.getValue();
@@ -545,6 +569,7 @@ public class SkipptyGame extends javax.swing.JFrame {
                 msg.content = score;
                 Client.Send(msg);
             } else {
+                //Oyun bitmediyse oyun tahtasını karşı cliente gönder
                 sendGameBoard();
                 this.isYourTurn = false;
                 this.isFirstMove = true;
